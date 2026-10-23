@@ -1,5 +1,7 @@
 # EmpoweringPointsTracker
 
+CC Points Tracker
+
 A static credit-card benefits and points tracker. The shared card catalog is
 loaded from a published Google Sheets CSV. Each visitor's portfolio is saved
 in their browser and is not synced between devices.
