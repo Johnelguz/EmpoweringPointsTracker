@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Card Catalog Guide | EmpoweringPointsTracker</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 text-gray-900 font-sans p-6">
+    <main class="max-w-3xl mx-auto">
+        <header class="mb-8 border-b pb-4">
+            <a href="index.html" class="text-sm font-semibold text-blue-700 hover:underline">&larr; Back to tracker</a>
+            <h1 class="text-3xl font-extrabold text-blue-900 mt-3">Shared Card Catalog</h1>
+            <p class="text-sm text-gray-500 mt-1">The tracker reads card options and benefit defaults from the published Google Sheet.</p>
+        </header>
+
+        <section class="bg-white p-6 rounded-2xl border shadow-sm mb-6">
+            <h2 class="text-lg font-bold mb-3">Sheet layout</h2>
+            <p class="text-sm text-gray-600 mb-4">Use one row per benefit. Repeat the card name, annual fee, multipliers, points label, and image URL on each benefit row. The points label is shown beside the user's numeric points balance (for example, "Ultimate Rewards points"). For the image, use a public HTTPS image URL from the card issuer's website; the issuer must allow the image to be displayed on other sites. A card with no benefits can have one row with the benefit columns blank.</p>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-sm">
+                    <thead>
+                        <tr class="bg-gray-50 text-gray-600">
+                            <th class="p-3">Card Name</th>
+                            <th class="p-3">Annual Fee</th>
+                            <th class="p-3">Multipliers (optional)</th>
+                            <th class="p-3">Points Label (optional)</th>
+                            <th class="p-3">Image URL (optional)</th>
+                            <th class="p-3">Benefit Name</th>
+                            <th class="p-3">Frequency</th>
+                            <th class="p-3">Value</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="border-t">
+                            <td class="p-3">Example Card</td>
+                            <td class="p-3">0</td>
+                            <td class="p-3">3x dining</td>
+                            <td class="p-3">Example Rewards points</td>
+                            <td class="p-3">https://issuer.example/card-image.jpg</td>
+                            <td class="p-3">Travel credit</td>
+                            <td class="p-3">Annual</td>
+                            <td class="p-3">100</td>
+                        </tr>
+                        <tr class="border-t">
+                            <td class="p-3">Example Card</td>
+                            <td class="p-3">0</td>
+                            <td class="p-3">3x dining</td>
+                            <td class="p-3">Example Rewards points</td>
+                            <td class="p-3">https://issuer.example/card-image.jpg</td>
+                            <td class="p-3">Dining credit</td>
+                            <td class="p-3">Monthly</td>
+                            <td class="p-3">10</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <p class="text-sm text-gray-600 mt-4">Keep the column headers exactly as shown. Points Label is optional; if omitted or blank, the tracker uses "Points." Annual fees and benefit values should be non-negative numbers; currency symbols and commas are also accepted. Publish the sheet tab as CSV so all visitors see the same catalog. If an image is unavailable or cannot be embedded, the tracker displays card initials instead.</p>
+        </section>
+
+        <section class="bg-white p-6 rounded-2xl border shadow-sm">
+            <h2 class="text-lg font-bold mb-2">Manage the catalog</h2>
+            <p class="text-sm text-gray-600">Edit the source Google Sheet, then publish the updated tab as CSV. The tracker reads the published sheet directly; this guide does not edit it. Since the sheet is published, its contents are publicly readable.</p>
+        </section>
+    </main>
+</body>
+</html>

@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EmpoweringPointsTracker</title>
+    <!-- Tailwind CSS for clean styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 text-gray-900 font-sans p-6">
+
+    <div class="max-w-4xl mx-auto" id="app">
+        <header class="sticky top-0 z-10 -mx-6 px-6 pt-3 mb-8 border-b pb-4 flex justify-between items-center bg-gray-50/95 backdrop-blur">
+            <div>
+                <h1 class="text-3xl font-extrabold text-blue-900">EmpoweringPointsTracker</h1>
+                <p class="text-sm text-gray-500">Track your cards, calculate realized benefit values, and manage points.</p>
+            </div>
+            <!-- Summary Dashboard Stats -->
+            <div class="flex gap-4 bg-white p-3 rounded-xl border shadow-sm text-right">
+                <div>
+                    <span class="text-xs text-gray-400 block">Total Cards</span>
+                    <span id="stat-cards" class="font-bold text-lg">0</span>
+                </div>
+                <div class="border-l pl-4 whitespace-nowrap">
+                    <span class="text-xs text-gray-400 block">Total Transferable Points</span>
+                    <span id="stat-points" class="font-bold text-lg text-blue-700">0</span>
+                </div>
+                <div class="border-l pl-4">
+                    <span class="text-xs text-gray-400 block">Annual Fees</span>
+                    <span id="stat-fees" class="font-bold text-lg text-red-600">$0</span>
+                </div>
+                <div class="border-l pl-4">
+                    <span class="text-xs text-gray-400 block">Realized Benefits</span>
+                    <span id="stat-benefits" class="font-bold text-lg text-green-600">$0</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Add Card Form Section -->
+        <section class="bg-white p-6 rounded-2xl border shadow-sm mb-8">
+            <div class="flex flex-wrap justify-between items-center gap-2 mb-4">
+                <h2 class="text-lg font-bold">Add a Card to Your Portfolio</h2>
+                <a href="card-catalog.html" class="text-sm font-semibold text-blue-700 hover:underline">Card catalog guide</a>
+            </div>
+            <div>
+                <select id="card-type" class="border p-2 rounded-lg text-sm bg-white">
+                    <option value="">Choose a card type</option>
+                </select>
+            </div>
+            <p id="card-catalog-status" role="status" aria-live="polite" class="mt-2 text-xs text-gray-500">Loading shared card options...</p>
+            <div class="mt-4 flex justify-end">
+                <button onclick="addCard()" class="bg-blue-600 text-white px-5 py-2 rounded-lg text-sm font-semibold hover:bg-blue-700 transition">Add Card</button>
+            </div>
+        </section>
+
+        <p id="portfolio-save-status" role="status" aria-live="polite" class="text-xs text-gray-500 mb-3">
+            Your portfolio is saved in this browser when you make changes.
+        </p>
+
+        <!-- Cards List Container -->
+        <section id="cards-container" class="space-y-6">
+            <!-- Dynamic cards will appear here -->
+        </section>
+    </div>
+
+    <script>
+        const PORTFOLIO_STORAGE_KEY = 'empoweringPointsPortfolio';
+        const CARD_CATALOG_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSFnbrK4vlU4GGHDYyGmSDbNf0X4fQpRLunCtAjpfuKAgtx-Bk2pX5QJ322tSR6XFtKsdkvZxU1aDw3/pub?gid=0&single=true&output=csv';
+        let cardCatalog = [];
+
+        function parseCsv(text) {
+            const rows = [];
+            let row = [];
+            let field = '';
+            let inQuotes = false;
+
+            for (let index = 0; index < text.length; index++) {
+                const character = text[index];
+                if (inQuotes) {
+                    if (character === '"' && text[index + 1] === '"') {
+                        field += '"';
+                        index++;
+                    } else if (character === '"') {
+                        inQuotes = false;
+                    } else {
+                        field += character;
+                    }
+                } else if (character === '"' && field.length === 0) {
+                    inQuotes = true;
+                } else if (character === ',') {
+                    row.push(field);
+                    field = '';
+                } else if (character === '\n' || character === '\r') {
+                    if (character === '\r' && text[index + 1] === '\n') index++;
+                    row.push(field);
+                    rows.push(row);
+                    row = [];
+                    field = '';
+                } else {
+                    field += character;
+                }
+            }
+
+            if (inQuotes) throw new Error('The CSV contains an unclosed quoted field.');
+            if (field.length > 0 || row.length > 0) {
+                row.push(field);
+                rows.push(row);
+            }
+            return rows;
+        }
+
+        function parseCardCatalog(csv) {
+            const rows = parseCsv(csv.replace(/^\uFEFF/, ''));
+            if (rows.length === 0) throw new Error('The published sheet is empty.');
+
+            const headers = rows[0].map(header =>
+                header.trim().toLowerCase().replace(/\s*\(optional\)\s*$/, '')
+            );
+            const column = name => headers.indexOf(name.toLowerCase());
+            const nameColumn = column('Card Name');
+            const feeColumn = column('Annual Fee');
+            const multipliersColumn = column('Multipliers');
+            const imageUrlColumn = column('Image URL');
+            const pointsLabelColumn = column('Points Label');
+            const benefitNameColumn = column('Benefit Name');
+            const frequencyColumn = column('Frequency');
+            const valueColumn = column('Value');
+            const requiredColumns = [
+                ['Card Name', nameColumn],
+                ['Annual Fee', feeColumn],
+                ['Benefit Name', benefitNameColumn],
+                ['Frequency', frequencyColumn],
+                ['Value', valueColumn]
+            ];
+            const missingColumns = requiredColumns.filter(([, index]) => index < 0).map(([name]) => name);
+            if (missingColumns.length > 0) {
+                throw new Error(`The published sheet is missing these columns: ${missingColumns.join(', ')}.`);
+            }
+            if (rows.length < 2) throw new Error('The published sheet has no card rows yet.');
+
+            const cardsByName = new Map();
+            rows.slice(1).forEach((cells, rowIndex) => {
+                if (cells.every(cell => cell.trim() === '')) return;
+                const name = (cells[nameColumn] || '').trim();
+                const feeText = (cells[feeColumn] || '').trim().replace(/[$,]/g, '');
+                const annualFee = Number(feeText);
+                if (!name || feeText === '' || !Number.isFinite(annualFee) || annualFee < 0) {
+                    throw new Error(`Row ${rowIndex + 2} must have a card name and a non-negative annual fee.`);
+                }
+
+                const multipliers = multipliersColumn < 0
+                    ? 'Standard Multipliers'
+                    : (cells[multipliersColumn] || '').trim() || 'Standard Multipliers';
+                const pointsLabel = pointsLabelColumn < 0
+                    ? ''
+                    : (cells[pointsLabelColumn] || '').trim();
+                const imageUrl = imageUrlColumn < 0 ? '' : (cells[imageUrlColumn] || '').trim();
+                if (imageUrl) {
+                    let parsedImageUrl;
+                    try {
+                        parsedImageUrl = new URL(imageUrl);
+                    } catch {
+                        throw new Error(`Row ${rowIndex + 2} has an invalid image URL.`);
+                    }
+                    if (parsedImageUrl.protocol !== 'https:' || parsedImageUrl.username || parsedImageUrl.password) {
+                        throw new Error(`Row ${rowIndex + 2} image URL must be a public HTTPS link.`);
+                    }
+                }
+                const key = name.toLowerCase();
+                let card = cardsByName.get(key);
+                if (!card) {
+                    card = { name, annualFee, multipliers, imageUrl, pointsLabel, benefits: [] };
+                    cardsByName.set(key, card);
+                } else if (card.annualFee !== annualFee || card.multipliers !== multipliers || card.imageUrl !== imageUrl) {
+                    throw new Error(`Card "${name}" has inconsistent annual fee, multipliers, or image URL in the sheet.`);
+                } else if (pointsLabel && card.pointsLabel && card.pointsLabel !== pointsLabel) {
+                    throw new Error(`Card "${name}" has inconsistent points labels in the sheet.`);
+                } else if (pointsLabel && !card.pointsLabel) {
+                    card.pointsLabel = pointsLabel;
+                }
+
+                const benefitName = (cells[benefitNameColumn] || '').trim();
+                const frequency = (cells[frequencyColumn] || '').trim();
+                const valueText = (cells[valueColumn] || '').trim().replace(/[$,]/g, '');
+                if (!benefitName && !frequency && !valueText) return;
+                const value = Number(valueText);
+                if (!benefitName || !frequency || valueText === '' || !Number.isFinite(value) || value < 0) {
+                    throw new Error(`Row ${rowIndex + 2} must have a benefit name, frequency, and non-negative value.`);
+                }
+                card.benefits.push({ name: benefitName, frequency, value, useful: true });
+            });
+
+            if (cardsByName.size === 0) throw new Error('The published sheet contains no valid card rows.');
+            return [...cardsByName.values()].map(card => ({
+                ...card,
+                pointsLabel: card.pointsLabel || 'Points'
+            }));
+        }
+
+        function renderCardOptions() {
+            const select = document.getElementById('card-type');
+            select.replaceChildren(new Option('Choose a card type', ''));
+            cardCatalog.forEach((card, index) => {
+                const option = document.createElement('option');
+                option.value = String(index);
+                option.textContent = card.name;
+                select.appendChild(option);
+            });
+        }
+
+        function escapeHtml(value) {
+                return String(value).replace(/[&<>"']/g, character => ({
+                    '&': '&amp;',
+                    '<': '&lt;',
+                    '>': '&gt;',
+                    '"': '&quot;',
+                    "'": '&#39;'
+                })[character]);
+        }
+
+        function getCardInitials(name) {
+                return name
+                    .split(/\s+/)
+                    .filter(Boolean)
+                    .slice(0, 2)
+                    .map(word => word[0])
+                    .join('')
+                    .toUpperCase();
+        }
+
+        async function loadCardCatalog() {
+                const status = document.getElementById('card-catalog-status');
+                try {
+                    const response = await fetch(CARD_CATALOG_CSV_URL);
+                    if (!response.ok) throw new Error(`The published sheet returned HTTP ${response.status}.`);
+                    cardCatalog = parseCardCatalog(await response.text());
+                    renderCardOptions();
+                    refreshPortfolioFromCatalog();
+                    status.textContent = `Loaded ${cardCatalog.length} card type${cardCatalog.length === 1 ? '' : 's'} from the shared catalog.`;
+                } catch (error) {
+                    status.textContent = `Could not load the shared card catalog: ${error.message}`;
+                    status.classList.remove('text-gray-500');
+                    status.classList.add('text-red-700');
+                }
+        }
+
+        const portfolioSaveStatus = document.getElementById('portfolio-save-status');
+        let portfolioStorageAvailable = true;
+
+        function loadPortfolio() {
+            try {
+                const savedPortfolio = localStorage.getItem(PORTFOLIO_STORAGE_KEY);
+                if (!savedPortfolio) return [];
+
+                const parsedPortfolio = JSON.parse(savedPortfolio);
+                if (!Array.isArray(parsedPortfolio) || parsedPortfolio.some(card =>
+                    !card ||
+                    typeof card.name !== 'string' ||
+                    !Number.isFinite(Number(card.annualFee)) ||
+                    !Array.isArray(card.benefits)
+                )) {
+                    throw new Error('Saved portfolio data is not in the expected format.');
+                }
+
+                portfolioSaveStatus.textContent = 'Your portfolio was restored from this browser.';
+                return parsedPortfolio;
+            } catch (error) {
+                portfolioStorageAvailable = false;
+                portfolioSaveStatus.textContent = `Could not restore your saved portfolio: ${error.message}`;
+                portfolioSaveStatus.classList.remove('text-gray-500');
+                portfolioSaveStatus.classList.add('text-red-700');
+                return [];
+            }
+        }
+
+        function savePortfolio() {
+            if (!portfolioStorageAvailable) return;
+
+            try {
+                localStorage.setItem(PORTFOLIO_STORAGE_KEY, JSON.stringify(portfolio));
+                portfolioSaveStatus.textContent = 'Portfolio saved in this browser. It will be available when you return on this device.';
+                portfolioSaveStatus.classList.remove('text-red-700');
+                portfolioSaveStatus.classList.add('text-gray-500');
+            } catch (error) {
+                portfolioSaveStatus.textContent = `Could not save your portfolio: ${error.message}`;
+                portfolioSaveStatus.classList.remove('text-gray-500');
+                portfolioSaveStatus.classList.add('text-red-700');
+            }
+        }
+
+        let portfolio = loadPortfolio();
+
+        function refreshPortfolioFromCatalog() {
+            const cardsByName = new Map(cardCatalog.map(card => [card.name.toLowerCase(), card]));
+
+            portfolio = portfolio.map(savedCard => {
+                const catalogCard = cardsByName.get(savedCard.name.toLowerCase());
+                if (!catalogCard) return savedCard;
+
+                const savedBenefits = new Map(savedCard.benefits.map(benefit => [
+                    `${benefit.name.trim().toLowerCase()}|${benefit.frequency.trim().toLowerCase()}`,
+                    benefit
+                ]));
+                const benefits = catalogCard.benefits.map(benefit => {
+                    const savedBenefit = savedBenefits.get(
+                        `${benefit.name.trim().toLowerCase()}|${benefit.frequency.trim().toLowerCase()}`
+                    );
+                    return savedBenefit
+                        ? {
+                            ...benefit,
+                            usefulness: savedBenefit.usefulness ?? (savedBenefit.useful ? 'yes' : 'no'),
+                            realizedValue: savedBenefit.realizedValue
+                        }
+                        : { ...benefit };
+                });
+
+                return {
+                    ...savedCard,
+                    annualFee: catalogCard.annualFee,
+                    multipliers: catalogCard.multipliers,
+                    imageUrl: catalogCard.imageUrl,
+                    pointsLabel: catalogCard.pointsLabel,
+                    benefits
+                };
+            });
+            savePortfolio();
+            render();
+        }
+
+        function render() {
+            const container = document.getElementById('cards-container');
+            container.innerHTML = '';
+
+            let totalCards = portfolio.length;
+            let totalFees = 0;
+            let totalRealized = 0;
+            let totalTransferablePoints = 0;
+
+            portfolio.forEach((card, cardIndex) => {
+                totalFees += Number(card.annualFee) || 0;
+                totalTransferablePoints += Number(card.points) || 0;
+
+                let cardBenefitsHtml = '';
+                let cardRealized = 0;
+                card.benefits.forEach((b, bIndex) => {
+                    const usefulness = ['yes', 'no', 'partial'].includes(b.usefulness)
+                        ? b.usefulness
+                        : (b.useful ? 'yes' : 'no');
+                    const realizedValue = usefulness === 'yes'
+                        ? Number(b.value) || 0
+                        : usefulness === 'partial'
+                            ? Number(b.realizedValue) || 0
+                            : 0;
+                    cardRealized += realizedValue;
+                    totalRealized += realizedValue;
+
+                    cardBenefitsHtml += `
+                        <tr class="border-b hover:bg-gray-50">
+                            <td class="p-3 font-medium">${escapeHtml(b.name)}</td>
+                            <td class="p-3 text-gray-500">${escapeHtml(b.frequency)}</td>
+                            <td class="p-3 text-green-600 font-semibold">$${b.value}</td>
+                            <td class="p-3">
+                                <select aria-label="Is ${escapeHtml(b.name)} useful?" onchange="setBenefitUsefulness(${cardIndex}, ${bIndex}, this.value)" class="border rounded-lg p-1.5 text-sm bg-white">
+                                    <option value="yes" ${usefulness === 'yes' ? 'selected' : ''}>Yes</option>
+                                    <option value="no" ${usefulness === 'no' ? 'selected' : ''}>No</option>
+                                    <option value="partial" ${usefulness === 'partial' ? 'selected' : ''}>Partial</option>
+                                </select>
+                            </td>
+                            <td class="p-3 text-green-700 font-semibold">
+                                ${usefulness === 'partial'
+                                    ? `<label class="sr-only" for="realized-value-${cardIndex}-${bIndex}">Realized value for ${escapeHtml(b.name)}</label><input id="realized-value-${cardIndex}-${bIndex}" type="number" min="0" step="0.01" value="${b.realizedValue ?? ''}" placeholder="$0" onchange="setBenefitRealizedValue(${cardIndex}, ${bIndex}, this)" class="w-28 border rounded-lg p-1.5 text-sm">`
+                                    : `$${realizedValue}`}
+                            </td>
+                        </tr>
+                    `;
+                });
+
+                container.innerHTML += `
+                    <div class="bg-white border rounded-2xl shadow-sm p-6">
+                        <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 border-b pb-4 gap-4">
+                            <div class="flex items-center gap-4 min-w-0">
+                                <div class="w-32 sm:w-36 shrink-0 aspect-[1.586/1] rounded-xl overflow-hidden bg-gradient-to-br from-blue-900 to-blue-600 shadow-md flex items-center justify-center">
+                                    ${card.imageUrl
+                                        ? `<img src="${escapeHtml(card.imageUrl)}" alt="${escapeHtml(card.name)} credit card" loading="lazy" data-card-image class="w-full h-full object-cover"><span hidden aria-hidden="true" class="text-white text-2xl font-bold tracking-widest">${escapeHtml(getCardInitials(card.name))}</span>`
+                                        : `<span aria-hidden="true" class="text-white text-2xl font-bold tracking-widest">${escapeHtml(getCardInitials(card.name))}</span>`}
+                                </div>
+                                <div class="min-w-0">
+                                    <h3 class="text-xl font-bold text-gray-800">${escapeHtml(card.name)}</h3>
+                                    <label for="card-points-${cardIndex}" class="block text-sm text-gray-500 mt-1">${escapeHtml(card.pointsLabel || 'Points')}</label>
+                                    <input id="card-points-${cardIndex}" type="number" min="0" step="1" value="${card.points ?? ''}" placeholder="Enter total points" onchange="updateCardPoints(${cardIndex}, this.value)" class="mt-1 w-48 border rounded-lg px-2 py-1.5 text-sm">
+                                    <p class="text-xs text-gray-400 mt-1">Multipliers: ${escapeHtml(card.multipliers)}</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-4">
+                                <div class="text-right">
+                                    <span class="text-xs text-gray-400 block">Annual Fee</span>
+                                    <span class="text-base font-semibold text-red-600">$${card.annualFee}</span>
+                                    <span class="text-xs text-gray-400 block mt-2">Realized Benefits</span>
+                                    <span class="text-base font-semibold text-green-700">$${cardRealized}</span>
+                                </div>
+                                <button onclick="deleteCard(${cardIndex})" class="text-red-500 hover:text-red-700 text-xs font-semibold px-2 py-1 border border-red-200 rounded">Remove</button>
+                            </div>
+                        </div>
+
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-sm">
+                                <thead>
+                                    <tr class="bg-gray-50 text-gray-600 uppercase text-xs">
+                                        <th class="p-3">Benefit</th>
+                                        <th class="p-3">Frequency</th>
+                                        <th class="p-3">Value</th>
+                                        <th class="p-3">Useful?</th>
+                                        <th class="p-3">Realized Value</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${cardBenefitsHtml}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                `;
+            });
+
+            container.querySelectorAll('[data-card-image]').forEach(image => {
+                image.addEventListener('error', () => {
+                    image.hidden = true;
+                    image.nextElementSibling.hidden = false;
+                }, { once: true });
+            });
+
+            // Update top dashboard stats
+            document.getElementById('stat-cards').innerText = totalCards;
+            document.getElementById('stat-points').innerText = totalTransferablePoints.toLocaleString('en-US');
+            document.getElementById('stat-fees').innerText = `$${totalFees}`;
+            document.getElementById('stat-benefits').innerText = `$${totalRealized}`;
+        }
+
+        function addCard() {
+            const selectedCard = document.getElementById('card-type').value;
+
+            if (selectedCard === '') return alert('Please choose a card type.');
+            const cardType = cardCatalog[Number(selectedCard)];
+            if (!cardType) return alert('That card type is no longer available. Refresh the page and try again.');
+
+            portfolio.push({
+                id: Date.now(),
+                name: cardType.name,
+                annualFee: cardType.annualFee,
+                points: '',
+                pointsLabel: cardType.pointsLabel,
+                multipliers: cardType.multipliers,
+                imageUrl: cardType.imageUrl,
+                benefits: cardType.benefits.map(benefit => ({ ...benefit }))
+            });
+
+            document.getElementById('card-type').value = '';
+            savePortfolio();
+            render();
+        }
+
+        function updateCardPoints(cardIndex, value) {
+            const points = value === '' ? '' : Number(value);
+            if (points !== '' && (!Number.isSafeInteger(points) || points < 0)) {
+                throw new Error('Points must be a non-negative whole number.');
+            }
+            portfolio[cardIndex].points = points;
+            savePortfolio();
+            render();
+        }
+
+        function deleteCard(index) {
+            portfolio.splice(index, 1);
+            savePortfolio();
+            render();
+        }
+
+        function setBenefitUsefulness(cardIndex, bIndex, usefulness) {
+            if (!['yes', 'no', 'partial'].includes(usefulness)) {
+                throw new Error(`Unsupported usefulness choice: ${usefulness}`);
+            }
+            portfolio[cardIndex].benefits[bIndex].usefulness = usefulness;
+            savePortfolio();
+            render();
+        }
+
+        function setBenefitRealizedValue(cardIndex, bIndex, input) {
+            if (!input.reportValidity()) return;
+            const realizedValue = input.value === '' ? 0 : Number(input.value);
+            if (!Number.isFinite(realizedValue) || realizedValue < 0) {
+                input.setCustomValidity('Enter a non-negative realized value.');
+                input.reportValidity();
+                input.setCustomValidity('');
+                return;
+            }
+            portfolio[cardIndex].benefits[bIndex].realizedValue = realizedValue;
+            savePortfolio();
+            render();
+        }
+
+        renderCardOptions();
+        render();
+        loadCardCatalog();
+    </script>
+</body>
+</html>
