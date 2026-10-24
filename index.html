@@ -10,9 +10,9 @@
 <body class="bg-gray-50 text-gray-900 font-sans p-6">
 
     <div class="max-w-4xl mx-auto" id="app">
-        <header class="sticky top-0 z-10 -mx-6 px-6 pt-3 mb-8 border-b pb-4 flex justify-between items-center bg-gray-50/95 backdrop-blur">
-            <div>
-                <h1 class="text-3xl font-extrabold text-blue-900">EmpoweringPointsTracker</h1>
+        <header class="sticky top-0 z-10 -mx-6 px-6 pt-3 mb-8 border-b pb-4 flex flex-wrap justify-between items-center gap-x-6 gap-y-4 bg-gray-50/95 backdrop-blur">
+            <div class="min-w-0">
+                <h1 class="text-2xl sm:text-3xl font-extrabold text-blue-900">EmpoweringPointsTracker</h1>
                 <p class="text-sm text-gray-500">Track your cards, calculate realized benefit values, and manage points.</p>
                 <a href="https://empoweringpoints.com" class="group mt-3 inline-flex items-center gap-2 rounded-full border border-blue-200 bg-white px-4 py-2 text-sm font-semibold text-blue-800 shadow-sm transition hover:border-blue-300 hover:bg-blue-50 hover:text-blue-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
                     Visit EmpoweringPoints.com
@@ -22,25 +22,56 @@
                 </a>
             </div>
             <!-- Summary Dashboard Stats -->
-            <div class="flex gap-4 bg-white p-3 rounded-xl border shadow-sm text-right">
-                <div>
-                    <span class="text-xs text-gray-400 block">Total Cards</span>
-                    <span id="stat-cards" class="font-bold text-lg">0</span>
+            <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 bg-white p-3 rounded-xl border shadow-sm text-center">
+                <div class="min-w-0">
+                    <span class="flex h-8 items-center justify-center text-[clamp(0.625rem,1vw,0.75rem)] leading-4 text-gray-400">Total Cards</span>
+                    <span id="stat-cards" class="block font-bold text-lg">0</span>
                 </div>
-                <div class="border-l pl-4 whitespace-nowrap">
-                    <span class="text-xs text-gray-400 block">Total Transferable Points</span>
-                    <span id="stat-points" class="font-bold text-lg text-blue-700">0</span>
+                <div class="min-w-0">
+                    <span class="flex h-8 items-center justify-center text-[clamp(0.625rem,1vw,0.75rem)] leading-4 text-gray-400">Total Transferable Points</span>
+                    <span id="stat-points" class="block font-bold text-lg text-blue-700">0</span>
                 </div>
-                <div class="border-l pl-4">
-                    <span class="text-xs text-gray-400 block">Annual Fees</span>
-                    <span id="stat-fees" class="font-bold text-lg text-red-600">$0</span>
+                <div class="min-w-0">
+                    <span class="flex h-8 items-center justify-center text-[clamp(0.625rem,1vw,0.75rem)] leading-4 text-gray-400">Total Non-Transferable Points</span>
+                    <span id="stat-non-transferable-points" class="block font-bold text-lg text-amber-700">0</span>
                 </div>
-                <div class="border-l pl-4">
-                    <span class="text-xs text-gray-400 block">Realized Benefits</span>
-                    <span id="stat-benefits" class="font-bold text-lg text-green-600">$0</span>
+                <div class="min-w-0">
+                    <span class="flex h-8 items-center justify-center text-[clamp(0.625rem,1vw,0.75rem)] leading-4 text-gray-400">Annual Fees</span>
+                    <span id="stat-fees" class="block font-bold text-lg text-red-600">$0</span>
+                </div>
+                <div class="min-w-0">
+                    <span class="flex h-8 items-center justify-center text-[clamp(0.625rem,1vw,0.75rem)] leading-4 text-gray-400">Realized Benefits</span>
+                    <span id="stat-benefits" class="block font-bold text-lg text-green-600">$0</span>
                 </div>
             </div>
         </header>
+
+        <section class="bg-white px-4 py-3 rounded-xl border shadow-sm mb-4">
+            <p class="mb-2 text-xs text-gray-500">Use this calculator to track cards and points for one person or two people together.</p>
+            <div class="flex flex-wrap items-end gap-3">
+                <div class="flex items-center gap-2">
+                    <h2 class="text-sm font-semibold text-gray-700">For</h2>
+                    <label for="person-count" class="sr-only">Number of people</label>
+                    <select id="person-count" onchange="updatePeopleSettings()" class="border p-2 rounded-lg text-sm bg-white">
+                        <option value="1">1 person</option>
+                        <option value="2">2 people</option>
+                    </select>
+                </div>
+                <div class="flex flex-1 flex-wrap items-end gap-3">
+                    <div class="flex min-w-40 flex-1 items-center gap-2">
+                        <label for="person-1-name" class="shrink-0 text-xs font-medium text-gray-600">Person 1</label>
+                        <input id="person-1-name" type="text" maxlength="80" placeholder="Name" onchange="updatePeopleSettings()" class="min-w-0 w-full border rounded-lg px-3 py-2 text-sm">
+                    </div>
+                    <div id="person-2-fields" class="min-w-40 flex-1" hidden>
+                        <div class="flex items-center gap-2">
+                            <label for="person-2-name" class="shrink-0 text-xs font-medium text-gray-600">Person 2</label>
+                            <input id="person-2-name" type="text" maxlength="80" placeholder="Name" onchange="updatePeopleSettings()" class="min-w-0 w-full border rounded-lg px-3 py-2 text-sm">
+                        </div>
+                    </div>
+                </div>
+                <p id="people-settings-status" role="status" aria-live="polite" class="text-xs text-gray-500 sm:ml-auto">Participant settings are saved in this browser.</p>
+            </div>
+        </section>
 
         <!-- Add Card Form Section -->
         <section class="bg-white p-6 rounded-2xl border shadow-sm mb-8">
@@ -51,6 +82,12 @@
             <div>
                 <select id="card-type" class="border p-2 rounded-lg text-sm bg-white">
                     <option value="">Choose a card type</option>
+                </select>
+            </div>
+            <div id="card-owner-fields" class="mt-3" hidden>
+                <label for="card-owner" class="block text-sm font-medium text-gray-700">Who is this card for?</label>
+                <select id="card-owner" class="mt-1 border p-2 rounded-lg text-sm bg-white">
+                    <option value="">Choose a person</option>
                 </select>
             </div>
             <p id="card-catalog-status" role="status" aria-live="polite" class="mt-2 text-xs text-gray-500">Loading shared card options...</p>
@@ -71,6 +108,7 @@
 
     <script>
         const PORTFOLIO_STORAGE_KEY = 'empoweringPointsPortfolio';
+        const PEOPLE_SETTINGS_STORAGE_KEY = 'empoweringPointsPeopleSettings';
         const CARD_CATALOG_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSFnbrK4vlU4GGHDYyGmSDbNf0X4fQpRLunCtAjpfuKAgtx-Bk2pX5QJ322tSR6XFtKsdkvZxU1aDw3/pub?gid=0&single=true&output=csv';
         let cardCatalog = [];
 
@@ -126,6 +164,7 @@
             const nameColumn = column('Card Name');
             const feeColumn = column('Annual Fee');
             const multipliersColumn = column('Multipliers');
+            const transferableColumn = column('Transferable');
             const imageUrlColumn = column('Image URL');
             const pointsLabelColumn = column('Points Label');
             const benefitNameColumn = column('Benefit Name');
@@ -157,6 +196,13 @@
                 const multipliers = multipliersColumn < 0
                     ? 'Standard Multipliers'
                     : (cells[multipliersColumn] || '').trim() || 'Standard Multipliers';
+                const transferableText = transferableColumn < 0
+                    ? ''
+                    : (cells[transferableColumn] || '').trim().toLowerCase();
+                if (transferableText && !['yes', 'no'].includes(transferableText)) {
+                    throw new Error(`Row ${rowIndex + 2} Transferable value must be "yes" or "no".`);
+                }
+                const transferable = transferableText !== 'no';
                 const pointsLabel = pointsLabelColumn < 0
                     ? ''
                     : (cells[pointsLabelColumn] || '').trim();
@@ -175,10 +221,13 @@
                 const key = name.toLowerCase();
                 let card = cardsByName.get(key);
                 if (!card) {
-                    card = { name, annualFee, multipliers, imageUrl, pointsLabel, benefits: [] };
+                    card = { name, annualFee, multipliers, transferable, imageUrl, pointsLabel, benefits: [] };
                     cardsByName.set(key, card);
-                } else if (card.annualFee !== annualFee || card.multipliers !== multipliers || card.imageUrl !== imageUrl) {
-                    throw new Error(`Card "${name}" has inconsistent annual fee, multipliers, or image URL in the sheet.`);
+                } else if (card.annualFee !== annualFee ||
+                    card.multipliers !== multipliers ||
+                    card.transferable !== transferable ||
+                    card.imageUrl !== imageUrl) {
+                    throw new Error(`Card "${name}" has inconsistent annual fee, multipliers, transferability, or image URL in the sheet.`);
                 } else if (pointsLabel && card.pointsLabel && card.pointsLabel !== pointsLabel) {
                     throw new Error(`Card "${name}" has inconsistent points labels in the sheet.`);
                 } else if (pointsLabel && !card.pointsLabel) {
@@ -251,6 +300,74 @@
         }
 
         const portfolioSaveStatus = document.getElementById('portfolio-save-status');
+        const peopleSettingsStatus = document.getElementById('people-settings-status');
+        const defaultPeopleSettings = { personCount: '1', person1Name: '', person2Name: '' };
+
+        function loadPeopleSettings() {
+            try {
+                const savedSettings = localStorage.getItem(PEOPLE_SETTINGS_STORAGE_KEY);
+                if (!savedSettings) return { ...defaultPeopleSettings };
+
+                const parsedSettings = JSON.parse(savedSettings);
+                if (!parsedSettings ||
+                    !['1', '2'].includes(parsedSettings.personCount) ||
+                    typeof parsedSettings.person1Name !== 'string' ||
+                    typeof parsedSettings.person2Name !== 'string') {
+                    throw new Error('Saved participant settings are not in the expected format.');
+                }
+                return parsedSettings;
+            } catch (error) {
+                peopleSettingsStatus.textContent = `Could not restore participant settings: ${error.message}`;
+                peopleSettingsStatus.classList.remove('text-gray-500');
+                peopleSettingsStatus.classList.add('text-red-700');
+                return { ...defaultPeopleSettings };
+            }
+        }
+
+        let peopleSettings = loadPeopleSettings();
+
+        function getPersonName(person) {
+            const name = person === 'person2' ? peopleSettings.person2Name : peopleSettings.person1Name;
+            return name.trim() || (person === 'person2' ? 'Person 2' : 'Person 1');
+        }
+
+        function renderPersonSettings() {
+            document.getElementById('person-count').value = peopleSettings.personCount;
+            document.getElementById('person-1-name').value = peopleSettings.person1Name;
+            document.getElementById('person-2-name').value = peopleSettings.person2Name;
+            document.getElementById('person-2-fields').hidden = peopleSettings.personCount !== '2';
+
+            const ownerFields = document.getElementById('card-owner-fields');
+            const ownerSelect = document.getElementById('card-owner');
+            const selectedOwner = ownerSelect.value;
+            ownerFields.hidden = peopleSettings.personCount !== '2';
+            ownerSelect.replaceChildren(new Option('Choose a person', ''));
+            ownerSelect.appendChild(new Option(getPersonName('person1'), 'person1'));
+            ownerSelect.appendChild(new Option(getPersonName('person2'), 'person2'));
+            ownerSelect.value = selectedOwner;
+        }
+
+        function updatePeopleSettings() {
+            peopleSettings = {
+                personCount: document.getElementById('person-count').value,
+                person1Name: document.getElementById('person-1-name').value.trim(),
+                person2Name: document.getElementById('person-2-name').value.trim()
+            };
+
+            renderPersonSettings();
+            try {
+                localStorage.setItem(PEOPLE_SETTINGS_STORAGE_KEY, JSON.stringify(peopleSettings));
+                peopleSettingsStatus.textContent = 'Participant settings are saved in this browser.';
+                peopleSettingsStatus.classList.remove('text-red-700');
+                peopleSettingsStatus.classList.add('text-gray-500');
+            } catch (error) {
+                peopleSettingsStatus.textContent = `Could not save participant settings: ${error.message}`;
+                peopleSettingsStatus.classList.remove('text-gray-500');
+                peopleSettingsStatus.classList.add('text-red-700');
+            }
+            render();
+        }
+
         let portfolioStorageAvailable = true;
 
         function loadPortfolio() {
@@ -324,6 +441,7 @@
                     ...savedCard,
                     annualFee: catalogCard.annualFee,
                     multipliers: catalogCard.multipliers,
+                    transferable: catalogCard.transferable,
                     imageUrl: catalogCard.imageUrl,
                     pointsLabel: catalogCard.pointsLabel,
                     benefits
@@ -341,10 +459,15 @@
             let totalFees = 0;
             let totalRealized = 0;
             let totalTransferablePoints = 0;
+            let totalNonTransferablePoints = 0;
 
             portfolio.forEach((card, cardIndex) => {
                 totalFees += Number(card.annualFee) || 0;
-                totalTransferablePoints += Number(card.points) || 0;
+                if (card.transferable === false) {
+                    totalNonTransferablePoints += Number(card.points) || 0;
+                } else {
+                    totalTransferablePoints += Number(card.points) || 0;
+                }
 
                 let cardBenefitsHtml = '';
                 let cardRealized = 0;
@@ -382,8 +505,8 @@
                 });
 
                 container.innerHTML += `
-                    <div class="bg-white border rounded-2xl shadow-sm p-6">
-                        <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 border-b pb-4 gap-4">
+                    <details class="group bg-white border rounded-2xl shadow-sm">
+                        <summary class="flex items-center justify-between gap-4 p-4 sm:p-6 cursor-pointer list-none [&::-webkit-details-marker]:hidden">
                             <div class="flex items-center gap-4 min-w-0">
                                 <div class="w-32 sm:w-36 shrink-0 aspect-[1.586/1] rounded-xl overflow-hidden bg-gradient-to-br from-blue-900 to-blue-600 shadow-md flex items-center justify-center">
                                     ${card.imageUrl
@@ -391,40 +514,52 @@
                                         : `<span aria-hidden="true" class="text-white text-2xl font-bold tracking-widest">${escapeHtml(getCardInitials(card.name))}</span>`}
                                 </div>
                                 <div class="min-w-0">
-                                    <h3 class="text-xl font-bold text-gray-800">${escapeHtml(card.name)}</h3>
+                                    <h3 class="text-lg sm:text-xl font-bold text-gray-800">${escapeHtml(card.name)}</h3>
+                                    ${peopleSettings.personCount === '2'
+                                        ? `<span class="mt-1 inline-block rounded-full bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-800">${escapeHtml(getPersonName(card.person === 'person2' ? 'person2' : 'person1'))}</span>`
+                                        : ''}
+                                </div>
+                            </div>
+                            <svg aria-hidden="true" class="h-5 w-5 shrink-0 text-gray-500 transition-transform group-open:rotate-180" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M5.22 7.22a.75.75 0 0 1 1.06 0L10 10.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 8.28a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd"/>
+                            </svg>
+                        </summary>
+                        <div class="border-t p-4 sm:p-6">
+                            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 border-b pb-4 gap-4">
+                                <div class="min-w-0">
                                     <label for="card-points-${cardIndex}" class="block text-sm text-gray-500 mt-1">${escapeHtml(card.pointsLabel || 'Points')}</label>
                                     <input id="card-points-${cardIndex}" type="number" min="0" step="1" value="${card.points ?? ''}" placeholder="Enter total points" onchange="updateCardPoints(${cardIndex}, this.value)" class="mt-1 w-48 border rounded-lg px-2 py-1.5 text-sm">
                                     <p class="text-xs text-gray-400 mt-1">Multipliers: ${escapeHtml(card.multipliers)}</p>
                                 </div>
-                            </div>
-                            <div class="flex items-center gap-4">
-                                <div class="text-right">
-                                    <span class="text-xs text-gray-400 block">Annual Fee</span>
-                                    <span class="text-base font-semibold text-red-600">$${card.annualFee}</span>
-                                    <span class="text-xs text-gray-400 block mt-2">Realized Benefits</span>
-                                    <span class="text-base font-semibold text-green-700">$${cardRealized}</span>
+                                <div class="flex items-center gap-4">
+                                    <div class="text-right">
+                                        <span class="text-xs text-gray-400 block">Annual Fee</span>
+                                        <span class="text-base font-semibold text-red-600">$${card.annualFee}</span>
+                                        <span class="text-xs text-gray-400 block mt-2">Realized Benefits</span>
+                                        <span class="text-base font-semibold text-green-700">$${cardRealized}</span>
+                                    </div>
+                                    <button onclick="deleteCard(${cardIndex})" class="text-red-500 hover:text-red-700 text-xs font-semibold px-2 py-1 border border-red-200 rounded">Remove</button>
                                 </div>
-                                <button onclick="deleteCard(${cardIndex})" class="text-red-500 hover:text-red-700 text-xs font-semibold px-2 py-1 border border-red-200 rounded">Remove</button>
+                            </div>
+
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-left text-sm">
+                                    <thead>
+                                        <tr class="bg-gray-50 text-gray-600 uppercase text-xs">
+                                            <th class="p-3">Benefit</th>
+                                            <th class="p-3">Frequency</th>
+                                            <th class="p-3">Value</th>
+                                            <th class="p-3">Useful?</th>
+                                            <th class="p-3">Realized Value</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        ${cardBenefitsHtml}
+                                    </tbody>
+                                </table>
                             </div>
                         </div>
-
-                        <div class="overflow-x-auto">
-                            <table class="w-full text-left text-sm">
-                                <thead>
-                                    <tr class="bg-gray-50 text-gray-600 uppercase text-xs">
-                                        <th class="p-3">Benefit</th>
-                                        <th class="p-3">Frequency</th>
-                                        <th class="p-3">Value</th>
-                                        <th class="p-3">Useful?</th>
-                                        <th class="p-3">Realized Value</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    ${cardBenefitsHtml}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
+                    </details>
                 `;
             });
 
@@ -438,6 +573,7 @@
             // Update top dashboard stats
             document.getElementById('stat-cards').innerText = totalCards;
             document.getElementById('stat-points').innerText = totalTransferablePoints.toLocaleString('en-US');
+            document.getElementById('stat-non-transferable-points').innerText = totalNonTransferablePoints.toLocaleString('en-US');
             document.getElementById('stat-fees').innerText = `$${totalFees}`;
             document.getElementById('stat-benefits').innerText = `$${totalRealized}`;
         }
@@ -449,10 +585,19 @@
             const cardType = cardCatalog[Number(selectedCard)];
             if (!cardType) return alert('That card type is no longer available. Refresh the page and try again.');
 
-            portfolio.push({
+            const person = peopleSettings.personCount === '2'
+                ? document.getElementById('card-owner').value
+                : 'person1';
+            if (peopleSettings.personCount === '2' && !['person1', 'person2'].includes(person)) {
+                return alert('Please choose who this card is for.');
+            }
+
+            portfolio.unshift({
                 id: Date.now(),
                 name: cardType.name,
+                person,
                 annualFee: cardType.annualFee,
+                transferable: cardType.transferable,
                 points: '',
                 pointsLabel: cardType.pointsLabel,
                 multipliers: cardType.multipliers,
@@ -461,6 +606,7 @@
             });
 
             document.getElementById('card-type').value = '';
+            document.getElementById('card-owner').value = '';
             savePortfolio();
             render();
         }
@@ -504,6 +650,7 @@
             render();
         }
 
+        renderPersonSettings();
         renderCardOptions();
         render();
         loadCardCatalog();

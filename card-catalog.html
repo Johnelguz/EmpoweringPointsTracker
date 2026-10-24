@@ -16,7 +16,7 @@
 
         <section class="bg-white p-6 rounded-2xl border shadow-sm mb-6">
             <h2 class="text-lg font-bold mb-3">Sheet layout</h2>
-            <p class="text-sm text-gray-600 mb-4">Use one row per benefit. Repeat the card name, annual fee, multipliers, points label, and image URL on each benefit row. The points label is shown beside the user's numeric points balance (for example, "Ultimate Rewards points"). For the image, use a public HTTPS image URL from the card issuer's website; the issuer must allow the image to be displayed on other sites. A card with no benefits can have one row with the benefit columns blank.</p>
+            <p class="text-sm text-gray-600 mb-4">Use one row per benefit. Repeat the card name, annual fee, multipliers, transferability, points label, and image URL on each benefit row. Set Transferable to "yes" or "no" to determine which dashboard total includes the card's points; if the column is omitted or blank, the tracker defaults to "yes." The points label is shown beside the user's numeric points balance (for example, "Ultimate Rewards points"). For the image, use a public HTTPS image URL from the card issuer's website; the issuer must allow the image to be displayed on other sites. A card with no benefits can have one row with the benefit columns blank.</p>
             <div class="overflow-x-auto">
                 <table class="w-full text-left text-sm">
                     <thead>
@@ -24,6 +24,7 @@
                             <th class="p-3">Card Name</th>
                             <th class="p-3">Annual Fee</th>
                             <th class="p-3">Multipliers (optional)</th>
+                            <th class="p-3">Transferable (optional)</th>
                             <th class="p-3">Points Label (optional)</th>
                             <th class="p-3">Image URL (optional)</th>
                             <th class="p-3">Benefit Name</th>
@@ -36,6 +37,7 @@
                             <td class="p-3">Example Card</td>
                             <td class="p-3">0</td>
                             <td class="p-3">3x dining</td>
+                            <td class="p-3">yes</td>
                             <td class="p-3">Example Rewards points</td>
                             <td class="p-3">https://issuer.example/card-image.jpg</td>
                             <td class="p-3">Travel credit</td>
@@ -46,6 +48,7 @@
                             <td class="p-3">Example Card</td>
                             <td class="p-3">0</td>
                             <td class="p-3">3x dining</td>
+                            <td class="p-3">yes</td>
                             <td class="p-3">Example Rewards points</td>
                             <td class="p-3">https://issuer.example/card-image.jpg</td>
                             <td class="p-3">Dining credit</td>
@@ -55,7 +58,7 @@
                     </tbody>
                 </table>
             </div>
-            <p class="text-sm text-gray-600 mt-4">Keep the column headers exactly as shown. Points Label is optional; if omitted or blank, the tracker uses "Points." Annual fees and benefit values should be non-negative numbers; currency symbols and commas are also accepted. Publish the sheet tab as CSV so all visitors see the same catalog. If an image is unavailable or cannot be embedded, the tracker displays card initials instead.</p>
+            <p class="text-sm text-gray-600 mt-4">Keep the column headers exactly as shown. Transferable and Points Label are optional; if Transferable is omitted or blank, the tracker uses "yes." If Points Label is omitted or blank, the tracker uses "Points." Annual fees and benefit values should be non-negative numbers; currency symbols and commas are also accepted. Publish the sheet tab as CSV so all visitors see the same catalog. If an image is unavailable or cannot be embedded, the tracker displays card initials instead.</p>
         </section>
 
         <section class="bg-white p-6 rounded-2xl border shadow-sm">
